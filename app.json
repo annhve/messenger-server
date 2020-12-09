@@ -1,0 +1,6 @@
+{
+  "name": "SPbSTU Messenger",
+  "description": "Server for SPbSTU Messenger project",
+  "image": "heroku/java",
+  "addons": [ "heroku-postgresql" ]
+}
