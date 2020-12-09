@@ -1,1 +1,1 @@
-web:    java -jar build/libs/messenger-server-0.0.1.jar
+web: java -jar build/libs/messenger-server-0.0.1.jar
