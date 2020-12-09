@@ -12,8 +12,10 @@ import io.ktor.auth.*
 import io.ktor.auth.jwt.*
 import io.ktor.features.*
 import io.ktor.gson.*
+import io.ktor.http.*
 import io.ktor.locations.*
 import io.ktor.request.*
+import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
 import org.slf4j.event.Level
@@ -65,6 +67,9 @@ fun Application.module(testing: Boolean = false) {
     }
 
     routing {
+        get("/") {
+            return@get call.respond(HttpStatusCode.OK, "TEST")
+        }
         // User routes
         login(db, jwtService, hashFunction)
         register(db, jwtService, hashFunction)
