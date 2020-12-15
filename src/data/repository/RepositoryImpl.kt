@@ -10,6 +10,7 @@ import com.deledzis.data.model.User
 import com.deledzis.util.formatDate
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.InsertStatement
+import java.sql.Timestamp
 
 class RepositoryImpl : Repository {
     override suspend fun createUser(username: String, nickname: String?, passwordHash: String): User? {
@@ -136,7 +137,7 @@ class RepositoryImpl : Repository {
             id = row[Messages.id],
             type = row[Messages.type],
             content = row[Messages.content],
-            date = row[Messages.date].formatDate(),
+            date = (row[Messages.date] as Timestamp).formatDate(),
             chatId = row[Messages.chatId],
             authorId = row[Messages.authorId]
         )
