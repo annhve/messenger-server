@@ -7,10 +7,8 @@ import com.deledzis.data.db.Users
 import com.deledzis.data.model.Chat
 import com.deledzis.data.model.Message
 import com.deledzis.data.model.User
-import com.deledzis.util.formatDate
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.InsertStatement
-import java.sql.Timestamp
 
 class RepositoryImpl : Repository {
     override suspend fun createUser(username: String, nickname: String?, passwordHash: String): User? {
@@ -99,11 +97,13 @@ class RepositoryImpl : Repository {
             Messages.chatId eq chatId and Messages.content.trim()
                 .lowerCase()
                 .like("%$filter%")
-        }.mapNotNull { rowToMessage(it) }
+        }.orderBy(Messages.date to SortOrder.DESC)
+            .mapNotNull { rowToMessage(it) }
     }
 
     override suspend fun getLastMessageInChat(chatId: Int): Message? = dbQuery {
-        return@dbQuery rowToMessage(Messages.select { Messages.chatId eq chatId }.lastOrNull())
+        return@dbQuery rowToMessage(Messages.select { Messages.chatId eq chatId }
+            .orderBy(Messages.date to SortOrder.DESC).fetchSize(1).firstOrNull())
     }
 
     private fun rowToUser(row: ResultRow?): User? {
@@ -133,11 +133,12 @@ class RepositoryImpl : Repository {
         if (row == null) {
             return null
         }
+        exposedLogger.error("row $row ${row[Messages.date]}")
         return Message(
             id = row[Messages.id],
             type = row[Messages.type],
             content = row[Messages.content],
-            date = (row[Messages.date] as Timestamp).formatDate(),
+            date = row[Messages.date],
             chatId = row[Messages.chatId],
             authorId = row[Messages.authorId]
         )

@@ -1,6 +1,8 @@
 package com.deledzis.data.response
 
 import com.deledzis.data.model.User
+import com.deledzis.util.DateUtils
+import java.time.LocalDateTime
 
 data class MessageResponse(
     val id: Int?,
@@ -10,4 +12,12 @@ data class MessageResponse(
     val date: String?,
     val chatId: Int?,
     val author: User?
-)
+) : Comparable<MessageResponse> {
+    override fun compareTo(other: MessageResponse): Int {
+        val thisToZdt = LocalDateTime.parse(this.date, DateUtils.DATE_TIME_FULL_FORMAT)
+        val otherToZdt = LocalDateTime.parse(other.date, DateUtils.DATE_TIME_FULL_FORMAT)
+
+        return thisToZdt.compareTo(otherToZdt)
+    }
+
+}

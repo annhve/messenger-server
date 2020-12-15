@@ -4,7 +4,7 @@ import com.deledzis.data.model.User
 import com.deledzis.data.model.getInterlocutorId
 import com.deledzis.data.repository.Repository
 import com.deledzis.data.response.*
-import com.deledzis.util.DateUtils
+import com.deledzis.util.formatDate
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.http.*
@@ -27,20 +27,22 @@ fun Route.getChat(db: Repository) {
                         HttpStatusCode.BadRequest,
                         ErrorResponse(407, "Собеседник не найден")
                     )
-                    val messages = db.getChatMessages(chatId = chat.id, filter = (chat.search ?: "").trim().toLowerCase())
-                        .sortedByDescending { DateUtils.getDate(it.date).time }
+                    val messages = db.getChatMessages(
+                        chatId = chat.id,
+                        filter = (chat.search ?: "").trim().toLowerCase()
+                    )
                     val response = ChatResponse(
                         id = it,
                         interlocutor = interlocutor,
-                        messages = messages.map {
+                        messages = messages.map { message ->
                             MessageResponse(
-                                id = it.id,
-                                type = it.type,
-                                content = it.content,
-                                fileName = it.fileName,
-                                date = it.date,
-                                chatId = it.chatId,
-                                author = if (it.authorId == user.id) user else interlocutor
+                                id = message.id,
+                                type = message.type,
+                                content = message.content,
+                                fileName = message.fileName,
+                                date = message.date.formatDate(),
+                                chatId = message.chatId,
+                                author = if (message.authorId == user.id) user else interlocutor
                             )
                         }
                     )

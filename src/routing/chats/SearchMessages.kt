@@ -3,7 +3,6 @@ package com.deledzis.routing.chats
 import com.deledzis.data.repository.Repository
 import com.deledzis.data.response.ErrorResponse
 import com.deledzis.data.response.MessagesResponse
-import com.deledzis.util.DateUtils
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.http.*
@@ -15,8 +14,10 @@ fun Route.searchMessages(db: Repository) {
     authenticate("jwt") {
         get<ChatsRoutes.ChatSearchRoute> { query ->
             try {
-                val messages = db.getChatMessages(query.id, (query.search ?: "").trim().toLowerCase())
-                    .sortedByDescending { DateUtils.getDate(it.date).time }
+                val messages = db.getChatMessages(
+                    chatId = query.id,
+                    filter = (query.search ?: "").trim().toLowerCase()
+                )
                 val response = MessagesResponse(messages = messages)
                 call.respond(response)
             } catch (e: Throwable) {
