@@ -5,7 +5,6 @@ import com.deledzis.data.model.getInterlocutorId
 import com.deledzis.data.repository.Repository
 import com.deledzis.data.response.ChatReducedResponse
 import com.deledzis.data.response.ChatsResponse
-import com.deledzis.data.response.ErrorResponse
 import com.deledzis.data.response.MessageResponse
 import com.deledzis.util.formatDate
 import io.ktor.application.*
@@ -20,10 +19,8 @@ fun Route.getChats(db: Repository) {
     authenticate("jwt") {
         get<ChatsRoutes.GetChatsRoute> {
             try {
-                val user = call.authentication.principal<User>() ?: return@get call.respond(
-                    HttpStatusCode.BadRequest,
-                    ErrorResponse(406, "Пользователь не найден")
-                )
+                val user = call.authentication.principal<User>()
+                    ?: return@get call.respond(HttpStatusCode(406, "Authentication Error"))
                 val chatsFromDb = db.getUserChats(user.id).map {
                     val lastMessage = db.getLastMessageInChat(it.id)
                     val interlocutorId = it.getInterlocutorId(user.id)
@@ -46,16 +43,12 @@ fun Route.getChats(db: Repository) {
                 }
 
                 val response = ChatsResponse(
-                    chats = chatsFromDb.filterNot { it.interlocutor == null }
-                        .sortedByDescending { it.lastMessage }
+                    chats = chatsFromDb.filterNot { it.interlocutor == null }.sortedByDescending { it.lastMessage }
                 )
                 call.respond(response)
             } catch (e: Throwable) {
                 application.log.error("Failed to get user chats", e)
-                call.respond(
-                    HttpStatusCode.BadRequest,
-                    ErrorResponse(400, "Не удалось выполнить запрос (ошибка ${e.localizedMessage})")
-                )
+                call.respond(HttpStatusCode(400, "Failed to execute request (exception ${e.localizedMessage})"))
             }
         }
     }

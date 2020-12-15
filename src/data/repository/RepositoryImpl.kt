@@ -11,6 +11,10 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.InsertStatement
 
 class RepositoryImpl : Repository {
+    override suspend fun checkUsernameAvailable(username: String): Boolean = dbQuery {
+        Users.select { Users.username eq username }.map { rowToUser(it) }.isNullOrEmpty()
+    }
+
     override suspend fun createUser(username: String, nickname: String?, passwordHash: String): User? {
         var statement: InsertStatement<Number>? = null
         dbQuery {
@@ -24,11 +28,11 @@ class RepositoryImpl : Repository {
     }
 
     override suspend fun getUser(userId: Int): User? = dbQuery {
-        Users.select { Users.id.eq(userId) }.map { rowToUser(it) }.singleOrNull()
+        Users.select { Users.id eq userId }.map { rowToUser(it) }.singleOrNull()
     }
 
     override suspend fun getUserByUsername(username: String): User? = dbQuery {
-        Users.select { Users.username.eq(username) }.map { rowToUser(it) }.singleOrNull()
+        Users.select { Users.username eq username }.map { rowToUser(it) }.singleOrNull()
     }
 
     override suspend fun getUsers(filter: String?): List<User> = dbQuery {
@@ -55,7 +59,7 @@ class RepositoryImpl : Repository {
     }
 
     override suspend fun getUserChats(userId: Int): List<Chat> = dbQuery {
-        Chats.select { Chats.authorId.eq(userId) or Chats.interlocutorId.eq(userId) }.mapNotNull { rowToChat(it) }
+        Chats.select { (Chats.authorId eq userId) or (Chats.interlocutorId eq userId) }.mapNotNull { rowToChat(it) }
     }
 
     override suspend fun getChat(chatId: Int): Chat? = dbQuery {
@@ -94,9 +98,9 @@ class RepositoryImpl : Repository {
 
     override suspend fun getChatMessages(chatId: Int, filter: String?): List<Message> = dbQuery {
         Messages.select {
-            Messages.chatId eq chatId and Messages.content.trim()
+            (Messages.chatId eq chatId) and (Messages.content.trim()
                 .lowerCase()
-                .like("%$filter%")
+                .like("%$filter%"))
         }.orderBy(Messages.date to SortOrder.DESC)
             .mapNotNull { rowToMessage(it) }
     }
@@ -133,7 +137,6 @@ class RepositoryImpl : Repository {
         if (row == null) {
             return null
         }
-        exposedLogger.error("row $row ${row[Messages.date]}")
         return Message(
             id = row[Messages.id],
             type = row[Messages.type],

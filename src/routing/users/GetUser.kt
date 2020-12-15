@@ -22,13 +22,10 @@ fun Route.getUser(db: Repository) {
                         nickname = userFromDb.nickname
                     )
                     call.respond(user)
-                } ?: call.respond(HttpStatusCode.NoContent, ErrorResponse(406, "Пользователь не найден"))
+                } ?: call.respond(HttpStatusCode.NoContent, ErrorResponse(406, "Authentication Error"))
             } catch (e: Throwable) {
                 application.log.error("Failed to find user by id ${userDetails.id}", e)
-                call.respond(
-                    HttpStatusCode.BadRequest,
-                    ErrorResponse(400, "Не удалось выполнить запрос (ошибка ${e.localizedMessage})")
-                )
+                call.respond(HttpStatusCode(400, "Failed to execute request (exception ${e.localizedMessage})"))
             }
         }
     }

@@ -17,26 +17,20 @@ fun Route.createMessage(db: Repository) {
         post<ChatsRoutes.CreateMessageRoute> {
             val signupParameters = call.receive<CreateMessageRequest>()
             val chatId = signupParameters.chatId
-                ?: return@post call.respond(HttpStatusCode.Unauthorized, ErrorResponse(411, "Не указан чат"))
+                ?: return@post call.respond(HttpStatusCode(411, "Missing chatId"))
             val authorId = signupParameters.authorId
-                ?: return@post call.respond(HttpStatusCode.Unauthorized, ErrorResponse(409, "Не указан пользователь"))
+                ?: return@post call.respond(HttpStatusCode(409, "Missing authorId"))
             val type = signupParameters.type ?: false
             val content = signupParameters.content
 
             try {
                 val newMessage = db.createMessage(chatId, authorId, type, content)
                 newMessage?.id?.let {
-                    call.respond(HttpStatusCode.OK, ErrorResponse(0, "успешно"))
-                } ?: call.respond(
-                    HttpStatusCode.BadRequest,
-                    ErrorResponse(412, "Не удалось отправить сообщение")
-                )
+                    call.respond(HttpStatusCode.OK, ErrorResponse(0, "success"))
+                } ?: call.respond(HttpStatusCode(412, "Failed to send message"))
             } catch (e: Throwable) {
-                application.log.error("Failed to register user", e)
-                call.respond(
-                    HttpStatusCode.BadRequest,
-                    ErrorResponse(400, "Не удалось выполнить запрос (ошибка ${e.localizedMessage})")
-                )
+                application.log.error("Failed to send message", e)
+                call.respond(HttpStatusCode(400, "Failed to execute request (exception ${e.localizedMessage})"))
             }
         }
     }

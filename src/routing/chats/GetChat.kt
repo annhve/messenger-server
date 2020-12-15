@@ -17,16 +17,12 @@ fun Route.getChat(db: Repository) {
     authenticate("jwt") {
         get<ChatsRoutes.GetChatRoute> { chat ->
             try {
-                val user = call.authentication.principal<User>() ?: return@get call.respond(
-                    HttpStatusCode.BadRequest,
-                    ErrorResponse(406, "Пользователь не найден")
-                )
+                val user = call.authentication.principal<User>()
+                    ?: return@get call.respond(HttpStatusCode(406, "Authentication Error"))
                 val chatFromDb = db.getChat(chat.id)
                 chatFromDb?.id?.let {
-                    val interlocutor = db.getUser(chatFromDb.getInterlocutorId(user.id)) ?: return@get call.respond(
-                        HttpStatusCode.BadRequest,
-                        ErrorResponse(407, "Собеседник не найден")
-                    )
+                    val interlocutor = db.getUser(chatFromDb.getInterlocutorId(user.id))
+                        ?: return@get call.respond(HttpStatusCode(407, "User for ${user.id} not found"))
                     val messages = db.getChatMessages(
                         chatId = chat.id,
                         filter = (chat.search ?: "").trim().toLowerCase()
@@ -47,13 +43,10 @@ fun Route.getChat(db: Repository) {
                         }
                     )
                     call.respond(response)
-                } ?: call.respond(HttpStatusCode.NoContent, ErrorResponse(408, "Чат не найден"))
+                } ?: call.respond(HttpStatusCode.NoContent, ErrorResponse(408, "Chat for ${chat.id} not found"))
             } catch (e: Throwable) {
                 application.log.error("Failed to get chat ${chat.id}", e)
-                call.respond(
-                    HttpStatusCode.BadRequest,
-                    ErrorResponse(400, "Не удалось выполнить запрос (ошибка ${e.localizedMessage})")
-                )
+                call.respond(HttpStatusCode(400, "Failed to execute request (exception ${e.localizedMessage})"))
             }
         }
     }

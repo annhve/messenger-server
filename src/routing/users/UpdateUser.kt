@@ -6,7 +6,6 @@ import com.deledzis.data.model.User
 import com.deledzis.data.repository.Repository
 import com.deledzis.data.request.UpdateUserRequest
 import com.deledzis.data.response.AuthorizedUserResponse
-import com.deledzis.data.response.ErrorResponse
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.http.*
@@ -23,21 +22,19 @@ fun Route.updateUser(
 ) {
     authenticate("jwt") {
         put<UsersRoute.UserUpdateRoute> {
-            val user = call.authentication.principal<User>() ?: return@put call.respond(
-                HttpStatusCode.BadRequest,
-                ErrorResponse(406, "Пользователь не найден")
-            )
+            val user = call.authentication.principal<User>()
+                ?: return@put call.respond(HttpStatusCode(406, "Authentication Error"))
 
             val updateUserParameters = call.receive<UpdateUserRequest>()
             val username = updateUserParameters.username
-                ?: return@put call.respond(HttpStatusCode.Unauthorized, ErrorResponse(401, "Не указан логин"))
+                ?: return@put call.respond(HttpStatusCode(401, "Missing username"))
             val nickname = updateUserParameters.nickname
             val password = updateUserParameters.password
             val newPassword = updateUserParameters.newPassword
 
             if (password.isNullOrBlank() && !newPassword.isNullOrBlank()) {
                 application.log.error("Failed to update user - no password")
-                return@put call.respond(HttpStatusCode.BadRequest, ErrorResponse(413, "Не указан текущий пароль"))
+                return@put call.respond(HttpStatusCode(413, "Missing password"))
             }
 
             val oldHash = password?.let { hashFunction(it) }
@@ -47,10 +44,7 @@ fun Route.updateUser(
                 userFromDb?.id?.let {
                     if (userFromDb.passwordHash != oldHash) {
                         application.log.error("Failed to update user - wrong password")
-                        return@put call.respond(
-                            HttpStatusCode.BadRequest,
-                            ErrorResponse(414, "Указан неверный текущий пароль")
-                        )
+                        return@put call.respond(HttpStatusCode(414, "Wrong password"))
                     }
 
                     val updatedUser = db.updateUser(user.id, username, nickname, newHash)
@@ -63,17 +57,11 @@ fun Route.updateUser(
                         )
                         call.sessions.set(ServerSession(it))
                         call.respond(authorizedUser)
-                    } ?: call.respond(
-                        HttpStatusCode.BadRequest,
-                        ErrorResponse(415, "Не удалось обновить пользователя")
-                    )
-                } ?: call.respond(HttpStatusCode.BadRequest, ErrorResponse(406, "Пользователь не найден"))
+                    } ?: call.respond(HttpStatusCode(415, "Failed to update user"))
+                } ?: call.respond(HttpStatusCode(406, "Authentication Error"))
             } catch (e: Throwable) {
                 application.log.error("Failed to update user", e)
-                call.respond(
-                    HttpStatusCode.BadRequest,
-                    ErrorResponse(400, "Не удалось выполнить запрос (ошибка ${e.localizedMessage})")
-                )
+                call.respond(HttpStatusCode(400, "Failed to execute request (exception ${e.localizedMessage})"))
             }
         }
     }

@@ -1,7 +1,6 @@
 package com.deledzis.routing.chats
 
 import com.deledzis.data.repository.Repository
-import com.deledzis.data.response.ErrorResponse
 import com.deledzis.data.response.MessagesResponse
 import io.ktor.application.*
 import io.ktor.auth.*
@@ -22,10 +21,7 @@ fun Route.searchMessages(db: Repository) {
                 call.respond(response)
             } catch (e: Throwable) {
                 application.log.error("Failed to find messages", e)
-                call.respond(
-                    HttpStatusCode.BadRequest,
-                    ErrorResponse(400, "Не удалось выполнить запрос (ошибка ${e.localizedMessage})")
-                )
+                call.respond(HttpStatusCode(400, "Failed to execute request (exception ${e.localizedMessage})"))
             }
         }
     }

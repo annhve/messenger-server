@@ -3,7 +3,6 @@ package com.deledzis.routing.users
 import com.deledzis.data.model.User
 import com.deledzis.data.model.getInterlocutorId
 import com.deledzis.data.repository.Repository
-import com.deledzis.data.response.ErrorResponse
 import com.deledzis.data.response.UsersResponse
 import io.ktor.application.*
 import io.ktor.auth.*
@@ -16,10 +15,8 @@ fun Route.getAvailableUsers(db: Repository) {
     authenticate("jwt") {
         get<UsersRoute.UsersAvailableRoute> { query ->
             try {
-                val user = call.authentication.principal<User>() ?: return@get call.respond(
-                    HttpStatusCode.BadRequest,
-                    ErrorResponse(406, "Пользователь не найден")
-                )
+                val user = call.authentication.principal<User>()
+                    ?: return@get call.respond(HttpStatusCode(406, "Authentication Error"))
                 val interlocutorsIdsFromDb = db.getUserChats(user.id).map {
                     it.getInterlocutorId(user.id)
                 }
@@ -29,10 +26,7 @@ fun Route.getAvailableUsers(db: Repository) {
                 call.respond(response)
             } catch (e: Throwable) {
                 application.log.error("Failed to find available users", e)
-                call.respond(
-                    HttpStatusCode.BadRequest,
-                    ErrorResponse(400, "Не удалось выполнить запрос (ошибка ${e.localizedMessage})")
-                )
+                call.respond(HttpStatusCode(400, "Failed to execute request (exception ${e.localizedMessage})"))
             }
         }
     }

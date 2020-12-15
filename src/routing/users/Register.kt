@@ -5,7 +5,6 @@ import com.deledzis.auth.ServerSession
 import com.deledzis.data.repository.Repository
 import com.deledzis.data.request.RegisterRequest
 import com.deledzis.data.response.AuthorizedUserResponse
-import com.deledzis.data.response.ErrorResponse
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.auth.jwt.*
@@ -25,10 +24,14 @@ fun Route.register(
     post<UsersRoute.UserRegisterRoute> {
         val signupParameters = call.receive<RegisterRequest>()
         val username = signupParameters.username
-            ?: return@post call.respond(HttpStatusCode.Unauthorized, ErrorResponse(401, "Не указан логин"))
+            ?: return@post call.respond(HttpStatusCode(401, "Missing username"))
         val nickname = signupParameters.nickname
         val password = signupParameters.password
-            ?: return@post call.respond(HttpStatusCode.Unauthorized, ErrorResponse(402, "Не указан пароль"))
+            ?: return@post call.respond(HttpStatusCode(402, "Missing password"))
+
+        if (!db.checkUsernameAvailable(username)) {
+            return@post call.respond(HttpStatusCode(405, "Already registered"))
+        }
 
         val hash = hashFunction(password)
         try {
@@ -42,16 +45,10 @@ fun Route.register(
                 )
                 call.sessions.set(ServerSession(it))
                 call.respond(authorizedUser)
-            } ?: call.respond(
-                HttpStatusCode.BadRequest,
-                ErrorResponse(405, "Пользователь с таким логином уже зарегистрирован")
-            )
+            } ?: call.respond(HttpStatusCode(405, "Already registered"))
         } catch (e: Throwable) {
             application.log.error("Failed to register user", e)
-            call.respond(
-                HttpStatusCode.BadRequest,
-                ErrorResponse(400, "Не удалось выполнить запрос (ошибка ${e.localizedMessage})")
-            )
+            call.respond(HttpStatusCode(400, "Failed to execute request (exception ${e.localizedMessage})"))
         }
     }
 }

@@ -5,7 +5,6 @@ import com.deledzis.auth.ServerSession
 import com.deledzis.data.repository.Repository
 import com.deledzis.data.request.LoginRequest
 import com.deledzis.data.response.AuthorizedUserResponse
-import com.deledzis.data.response.ErrorResponse
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.auth.jwt.*
@@ -25,9 +24,9 @@ fun Route.login(
     post<UsersRoute.UserLoginRoute> {
         val loginParameters = call.receive<LoginRequest>()
         val username = loginParameters.username
-            ?: return@post call.respond(HttpStatusCode.Unauthorized, ErrorResponse(401, "Не указан логин"))
+            ?: return@post call.respond(HttpStatusCode(401, "Missing username"))
         val password = loginParameters.password
-            ?: return@post call.respond(HttpStatusCode.Unauthorized, ErrorResponse(402, "Не указан пароль"))
+            ?: return@post call.respond(HttpStatusCode(402, "Missing password"))
 
         val hash = hashFunction(password)
         try {
@@ -43,15 +42,12 @@ fun Route.login(
                     call.sessions.set(ServerSession(it))
                     call.respond(authorizedUser)
                 } else {
-                    call.respond(HttpStatusCode.BadRequest, ErrorResponse(403, "Неправильный логин или пароль"))
+                    call.respond(HttpStatusCode(403, "Wrong password"))
                 }
-            } ?: call.respond(HttpStatusCode.BadRequest, ErrorResponse(404, "Пользователь с такими данными не найден"))
+            } ?: call.respond(HttpStatusCode(404, "User not found"))
         } catch (e: Throwable) {
-            application.log.error("Failed to register user", e)
-            call.respond(
-                HttpStatusCode.BadRequest,
-                ErrorResponse(400, "Не удалось выполнить запрос (ошибка ${e.localizedMessage})")
-            )
+            application.log.error("Failed to sign in user", e)
+            call.respond(HttpStatusCode(400, "Failed to execute request (exception ${e.localizedMessage})"))
         }
     }
 }

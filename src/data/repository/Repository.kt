@@ -5,6 +5,8 @@ import com.deledzis.data.model.Message
 import com.deledzis.data.model.User
 
 interface Repository {
+    suspend fun checkUsernameAvailable(username: String): Boolean
+
     suspend fun createUser(
         username: String,
         nickname: String?,
