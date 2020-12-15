@@ -5,13 +5,11 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 fun Date.formatDate(
-    format: SimpleDateFormat = DateUtils.ISO_24H_FORMAT,
+    format: SimpleDateFormat = DateUtils.ISO_8601_24H_FULL_FORMAT,
     timeZone: String? = null
 ): String {
-    val dt = format
-    dt.timeZone =
-        if (timeZone != null) TimeZone.getTimeZone("Europe/Moscow") else TimeZone.getDefault()
-    return dt.format(this)
+    format.timeZone = if (timeZone != null) TimeZone.getTimeZone(timeZone) else TimeZone.getTimeZone("UTC")
+    return format.format(this)
 }
 
 fun Date.ignoreTime(): Date {

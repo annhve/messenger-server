@@ -4,8 +4,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 object DateUtils {
-    val ISO_8601_24H_FULL_FORMAT = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale("ru"))
-    val ISO_24H_FORMAT = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale("ru"))
+    val ISO_8601_24H_FULL_FORMAT = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale("ru"))
     val DF_ONLY_DAY = SimpleDateFormat("dd MMMM yyyy", Locale("ru"))
     val DF_WEEK_DAY_TIME = SimpleDateFormat("EEEE, d MMMM, в HH:mm МСК", Locale("ru"))
     val DF_DAY_TIME_TIME = SimpleDateFormat("dd MMMM yyyy в HH:mm МСК", Locale("ru"))
@@ -25,7 +24,7 @@ object DateUtils {
         return if (ignoreTime) date.ignoreTime() else date
     }
 
-    fun getDate(date: String, format: SimpleDateFormat = ISO_24H_FORMAT): Date =
+    fun getDate(date: String, format: SimpleDateFormat = ISO_8601_24H_FULL_FORMAT): Date =
         format.parse(date)
 
     fun getCurrentDate(ignoreTime: Boolean = true): Date = if (ignoreTime) {

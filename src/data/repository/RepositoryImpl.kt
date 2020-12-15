@@ -7,6 +7,7 @@ import com.deledzis.data.db.Users
 import com.deledzis.data.model.Chat
 import com.deledzis.data.model.Message
 import com.deledzis.data.model.User
+import com.deledzis.util.formatDate
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.InsertStatement
 
@@ -77,8 +78,7 @@ class RepositoryImpl : Repository {
         chatId: Int,
         userId: Int,
         type: Boolean,
-        content: String?,
-        date: String
+        content: String?
     ): Message? {
         var statement: InsertStatement<Number>? = null
         dbQuery {
@@ -87,7 +87,6 @@ class RepositoryImpl : Repository {
                 message[Messages.authorId] = userId
                 message[Messages.type] = type
                 message[Messages.content] = content
-                message[Messages.date] = date
             }
         }
 
@@ -137,7 +136,7 @@ class RepositoryImpl : Repository {
             id = row[Messages.id],
             type = row[Messages.type],
             content = row[Messages.content],
-            date = row[Messages.date],
+            date = row[Messages.date].formatDate(),
             chatId = row[Messages.chatId],
             authorId = row[Messages.authorId]
         )

@@ -25,7 +25,7 @@ interface Repository {
 
     suspend fun createChat(userId: Int, interlocutorId: Int): Chat?
 
-    suspend fun createMessage(chatId: Int, userId: Int, type: Boolean, content: String?, date: String): Message?
+    suspend fun createMessage(chatId: Int, userId: Int, type: Boolean, content: String?): Message?
 
     suspend fun getChatMessages(chatId: Int, filter: String?): List<Message>
 

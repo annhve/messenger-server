@@ -30,15 +30,15 @@ fun Route.getChats(db: Repository) {
                     ChatReducedResponse(
                         id = it.id,
                         interlocutor = interlocutor,
-                        lastMessage = lastMessage?.let {
+                        lastMessage = lastMessage?.let { message ->
                             MessageResponse(
-                                id = it.id,
-                                type = it.type,
-                                content = it.content,
-                                fileName = it.fileName,
-                                date = it.date,
-                                chatId = it.chatId,
-                                author = if (it.authorId == user.id) user else interlocutor
+                                id = message.id,
+                                type = message.type,
+                                content = message.content,
+                                fileName = message.fileName,
+                                date = message.date,
+                                chatId = message.chatId,
+                                author = if (message.authorId == user.id) user else interlocutor
                             )
                         }
                     )

@@ -3,9 +3,6 @@ package com.deledzis.routing.chats
 import com.deledzis.data.repository.Repository
 import com.deledzis.data.request.CreateMessageRequest
 import com.deledzis.data.response.ErrorResponse
-import com.deledzis.util.DateUtils
-import com.deledzis.util.DateUtils.ISO_24H_FORMAT
-import com.deledzis.util.formatDate
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.http.*
@@ -27,8 +24,7 @@ fun Route.createMessage(db: Repository) {
             val content = signupParameters.content
 
             try {
-                val date = DateUtils.getCurrentDate(ignoreTime = false).formatDate(format = ISO_24H_FORMAT)
-                val newMessage = db.createMessage(chatId, authorId, type, content, date)
+                val newMessage = db.createMessage(chatId, authorId, type, content)
                 newMessage?.id?.let {
                     call.respond(HttpStatusCode.OK, ErrorResponse(0, "успешно"))
                 } ?: call.respond(
