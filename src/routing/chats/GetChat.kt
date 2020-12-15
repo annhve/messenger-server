@@ -35,7 +35,6 @@ fun Route.getChat(db: Repository) {
                                 id = message.id,
                                 type = message.type,
                                 content = message.content,
-                                fileName = message.fileName,
                                 date = message.date.formatDate(),
                                 chatId = message.chatId,
                                 author = if (message.authorId == user.id) user else interlocutor
